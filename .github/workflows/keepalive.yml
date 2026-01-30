@@ -1,0 +1,22 @@
+# Ping Render deployment every 10 minutes so the free-tier service doesn't spin down.
+# Set Repository variable RENDER_APP_URL (e.g. https://your-app.onrender.com) in
+# Settings → Secrets and variables → Actions → Variables. If unset, the default below is used.
+name: Render keep-alive
+
+on:
+  schedule:
+    # Every 10 minutes (Render free tier spins down after ~15 min idle)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allow manual run from Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        run: |
+          url="${RENDER_APP_URL:-https://vendor-scorecard.onrender.com}/health"
+          echo "Pinging $url"
+          curl -sf --max-time 60 "$url" || exit 1
+        env:
+          RENDER_APP_URL: ${{ vars.RENDER_APP_URL }}

@@ -1,10 +1,11 @@
 import axios from 'axios';
 
+// Production: set REACT_APP_API_URL='' in .env.production so relative URLs hit same host.
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },

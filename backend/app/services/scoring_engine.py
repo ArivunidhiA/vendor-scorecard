@@ -180,13 +180,14 @@ class ScoringEngine:
         # Sort by quality score descending
         benchmark_data.sort(key=lambda x: x["quality_score"], reverse=True)
         
+        n = len(benchmark_data)
         return {
             "vendors": benchmark_data,
             "summary": {
-                "total_vendors": len(benchmark_data),
-                "avg_quality_score": sum(v["quality_score"] for v in benchmark_data) / len(benchmark_data),
-                "avg_cost_per_record": sum(v["cost_per_record"] for v in benchmark_data) / len(benchmark_data),
-                "avg_coverage": sum(v["coverage_percentage"] for v in benchmark_data) / len(benchmark_data)
+                "total_vendors": n,
+                "avg_quality_score": sum(v["quality_score"] for v in benchmark_data) / n if n else 0,
+                "avg_cost_per_record": sum(v["cost_per_record"] for v in benchmark_data) / n if n else 0,
+                "avg_coverage": sum(v["coverage_percentage"] for v in benchmark_data) / n if n else 0
             }
         }
     

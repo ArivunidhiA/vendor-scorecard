@@ -3,9 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.api.routes import vendors, comparison, alerts, analysis
-from app.database.db import engine, Base
+from app.database.db import engine, Base, SessionLocal
+from app.models import Vendor
 
 Base.metadata.create_all(bind=engine)
+
+# Seed empty database (e.g. on Render ephemeral disk) so dashboard has data
+def _ensure_seeded():
+    db = SessionLocal()
+    try:
+        if db.query(Vendor).count() == 0:
+            from app.database.seed_data import create_sample_data
+            create_sample_data()
+    finally:
+        db.close()
+
+_ensure_seeded()
 
 app = FastAPI(
     title="Criminal Records Vendor Quality Scorecard API",

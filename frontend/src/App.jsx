@@ -3,12 +3,14 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import Dashboard from './pages/Dashboard';
 import VendorDetail from './pages/VendorDetail';
+import MistBackground from './components/ui/MistBackground';
 import './index.css';
 
 function App() {
   return (
     <Router>
-      <div className="App">
+      <div className="App relative">
+        <MistBackground />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />

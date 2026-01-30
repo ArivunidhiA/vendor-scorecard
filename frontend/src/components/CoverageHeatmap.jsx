@@ -25,11 +25,11 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
     if (coverage >= 75) return 'bg-warning-400';
     if (coverage >= 50) return 'bg-warning-500';
     if (coverage > 0) return 'bg-danger-400';
-    return 'bg-gray-200';
+    return 'bg-white/10';
   };
 
   const getTextColor = (coverage) => {
-    return coverage >= 75 ? 'text-white' : 'text-gray-900';
+    return coverage >= 75 ? 'text-white' : 'text-white';
   };
 
   const getCoverageStats = () => {
@@ -54,36 +54,36 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
   const stats = getCoverageStats();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white/[0.04] rounded-2xl border border-white/[0.06] p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
-          <MapPin className="w-5 h-5 text-primary-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Geographic Coverage Heatmap</h2>
+          <MapPin className="w-5 h-5 text-green-500" />
+          <h2 className="text-lg font-semibold text-white">Geographic Coverage Heatmap</h2>
         </div>
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-success-500 rounded"></div>
-            <span className="text-gray-600">95%+</span>
+            <span className="text-white/80">95%+</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-success-400 rounded"></div>
-            <span className="text-gray-600">85-94%</span>
+            <span className="text-white/80">85-94%</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-warning-400 rounded"></div>
-            <span className="text-gray-600">75-84%</span>
+            <span className="text-white/80">75-84%</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-warning-500 rounded"></div>
-            <span className="text-gray-600">50-74%</span>
+            <span className="text-white/80">50-74%</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-danger-400 rounded"></div>
-            <span className="text-gray-600">1-49%</span>
+            <span className="text-white/80">1-49%</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-gray-200 rounded"></div>
-            <span className="text-gray-600">0%</span>
+            <div className="w-4 h-4 bg-white/10 rounded"></div>
+            <span className="text-white/80">0%</span>
           </div>
         </div>
       </div>
@@ -93,19 +93,19 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
         {vendors.map(vendor => {
           const vendorStats = stats[vendor.id];
           return (
-            <div key={vendor.id} className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-2">{vendor.name}</h3>
+            <div key={vendor.id} className="bg-white/5 rounded-lg p-4">
+              <h3 className="font-medium text-white mb-2">{vendor.name}</h3>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Avg Coverage:</span>
+                  <span className="text-white/80">Avg Coverage:</span>
                   <span className="font-medium">{formatPercentage(vendorStats.average)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Jurisdictions:</span>
+                  <span className="text-white/80">Jurisdictions:</span>
                   <span className="font-medium">{vendorStats.covered}/{vendorStats.total}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Max Coverage:</span>
+                  <span className="text-white/80">Max Coverage:</span>
                   <span className="font-medium">{formatPercentage(vendorStats.max)}</span>
                 </div>
               </div>
@@ -119,16 +119,16 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="text-left p-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200">
+              <th className="text-left p-2 text-sm font-medium text-white/80 bg-white/5 border border-white/20">
                 Vendor / Jurisdiction
               </th>
               {jurisdictions.map(jurisdiction => (
                 <th 
                   key={jurisdiction.id} 
-                  className="text-center p-2 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 min-w-[80px]"
+                  className="text-center p-2 text-xs font-medium text-white/80 bg-white/5 border border-white/20 min-w-[80px]"
                 >
                   <div>{jurisdiction.name}</div>
-                  <div className="text-gray-500">{jurisdiction.state}</div>
+                  <div className="text-white/60">{jurisdiction.state}</div>
                 </th>
               ))}
             </tr>
@@ -136,9 +136,9 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
           <tbody>
             {vendors.map(vendor => (
               <tr key={vendor.id}>
-                <td className="p-2 font-medium text-gray-900 bg-gray-50 border border-gray-200">
+                <td className="p-2 font-medium text-white bg-white/5 border border-white/20">
                   <div className="flex items-center space-x-2">
-                    <Activity className="w-4 h-4 text-primary-600" />
+                    <Activity className="w-4 h-4 text-green-500" />
                     <span>{vendor.name}</span>
                   </div>
                 </td>
@@ -147,7 +147,7 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
                   return (
                     <td 
                       key={jurisdiction.id} 
-                      className={`p-2 text-center border border-gray-200 ${getHeatmapColor(coverage)} ${getTextColor(coverage)} text-xs font-medium transition-colors duration-200 hover:opacity-80`}
+                      className={`p-2 text-center border border-white/[0.06] ${getHeatmapColor(coverage)} ${getTextColor(coverage)} text-xs font-medium transition-colors duration-200 hover:opacity-80`}
                       title={`${vendor.name} - ${jurisdiction.name}: ${formatPercentage(coverage)}`}
                     >
                       {coverage > 0 ? formatPercentage(coverage) : '-'}
@@ -160,16 +160,21 @@ const CoverageHeatmap = ({ data, vendors, jurisdictions }) => {
         </table>
       </div>
 
-      {/* Insights */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-medium text-blue-900 mb-2">Coverage Insights</h3>
-        <div className="text-sm text-blue-800 space-y-1">
-          <div>• <strong>Vendor A</strong> shows comprehensive coverage across all jurisdictions with consistently high percentages.</div>
-          <div>• <strong>Vendor D</strong> demonstrates specialized coverage in California jurisdictions (LA County, Orange County).</div>
-          <div>• <strong>Vendor C</strong> has the most limited coverage, particularly in major metropolitan areas.</div>
-          <div>• <strong>Vendor B</strong> provides balanced coverage with moderate performance across most jurisdictions.</div>
+      {/* Insights - dynamic from vendors when available */}
+      {vendors.length > 0 && (
+        <div className="mt-6 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+          <h3 className="font-heading font-medium text-white mb-2">Coverage insights</h3>
+          <div className="text-sm text-white/70 space-y-1">
+            {vendors.slice(0, 4).map((v) => {
+              const s = stats[v.id];
+              const avg = s ? formatPercentage(s.average) : '—';
+              return (
+                <div key={v.id}>• <strong className="text-white/90">{v.name}</strong> — average coverage {avg} across {s?.covered ?? 0} jurisdictions.</div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

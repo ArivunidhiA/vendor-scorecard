@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, TrendingDown, MapPin, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, MapPin, Clock, CheckCircle, AlertTriangle, Shield, Target, Globe, BarChart3, Home, Award } from 'lucide-react';
 import { vendorAPI, alertAPI } from '../utils/api';
 import { formatCurrency, formatPercentage, formatDate, getQualityGrade, getStatusColor } from '../utils/calculations';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const VendorDetail = () => {
   const { id } = useParams();
@@ -75,11 +76,16 @@ const VendorDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="loading-spinner w-12 h-12 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading vendor details...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <div className="loading-spinner w-16 h-16 mx-auto mb-6"></div>
+          <p className="text-xl font-semibold text-gray-700 animate-pulse">Loading vendor details...</p>
+        </motion.div>
       </div>
     );
   }
@@ -109,22 +115,23 @@ const VendorDetail = () => {
   const chartData = formatChartData(history);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="btn-secondary flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </button>
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                metrics.quality_score >= 90 ? 'bg-gradient-to-br from-green-500 to-green-600' :
+                metrics.quality_score >= 80 ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
+                metrics.quality_score >= 70 ? 'bg-gradient-to-br from-orange-500 to-orange-600' :
+                'bg-gradient-to-br from-red-500 to-red-600'
+              }`}>
+                <Award className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{vendor.name}</h1>
-                <p className="text-sm text-gray-600">{vendor.description}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{vendor.name}</h1>
+                <p className="text-sm text-gray-500">{vendor.description}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -333,25 +340,25 @@ const VendorDetail = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">PII Completeness (40%)</span>
-                      <span className={`font-medium ${getStatusColor(metrics.pii_completeness)}`}>
+                      <span className={`font-medium ${getStatusColor(metrics.pii_completeness, { high: 90, medium: 75 })}`}>
                         {formatPercentage(metrics.pii_completeness)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">Disposition Accuracy (30%)</span>
-                      <span className={`font-medium ${getStatusColor(metrics.disposition_accuracy)}`}>
+                      <span className={`font-medium ${getStatusColor(metrics.disposition_accuracy, { high: 90, medium: 75 })}`}>
                         {formatPercentage(metrics.disposition_accuracy)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">Data Freshness (20%)</span>
-                      <span className={`font-medium ${getStatusColor(100 - metrics.avg_freshness_days)}`}>
+                      <span className={`font-medium ${getStatusColor(100 - metrics.avg_freshness_days, { high: 85, medium: 70 })}`}>
                         {metrics.avg_freshness_days.toFixed(1)} days
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700">Geographic Coverage (10%)</span>
-                      <span className={`font-medium ${getStatusColor(metrics.geographic_coverage)}`}>
+                      <span className={`font-medium ${getStatusColor(metrics.geographic_coverage, { high: 90, medium: 75 })}`}>
                         {formatPercentage(metrics.geographic_coverage)}
                       </span>
                     </div>
@@ -416,19 +423,19 @@ const VendorDetail = () => {
                         <td className="font-medium text-gray-900">{jur.jurisdiction}</td>
                         <td>{jur.state}</td>
                         <td>
-                          <span className={`font-medium ${getStatusColor(jur.coverage_percentage)}`}>
+                          <span className={`font-medium ${getStatusColor(jur.coverage_percentage, { high: 90, medium: 75 })}`}>
                             {formatPercentage(jur.coverage_percentage)}
                           </span>
                         </td>
                         <td>{jur.avg_turnaround_hours.toFixed(1)}h</td>
                         <td>{jur.record_count.toLocaleString()}</td>
                         <td>
-                          <span className={`font-medium ${getStatusColor(jur.pii_completeness_rate)}`}>
+                          <span className={`font-medium ${getStatusColor(jur.pii_completeness_rate, { high: 90, medium: 75 })}`}>
                             {formatPercentage(jur.pii_completeness_rate)}
                           </span>
                         </td>
                         <td>
-                          <span className={`font-medium ${getStatusColor(jur.disposition_accuracy_rate)}`}>
+                          <span className={`font-medium ${getStatusColor(jur.disposition_accuracy_rate, { high: 90, medium: 75 })}`}>
                             {formatPercentage(jur.disposition_accuracy_rate)}
                           </span>
                         </td>

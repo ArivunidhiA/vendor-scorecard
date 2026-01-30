@@ -1,10 +1,13 @@
 import random
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from app.database import SessionLocal, engine
+from app.database.db import SessionLocal, engine, Base
 from app.models import *
 
 def create_sample_data():
+    # Create tables first
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
     
     try:

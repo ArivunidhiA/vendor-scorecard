@@ -35,7 +35,7 @@ export const getQualityGrade = (score) => {
   return { grade: 'D', color: 'text-danger-600' };
 };
 
-export const getStatusColor = (value, thresholds) => {
+export const getStatusColor = (value, thresholds = {}) => {
   const { high = 90, medium = 75 } = thresholds;
   
   if (value >= high) return 'text-success-600';
@@ -43,7 +43,7 @@ export const getStatusColor = (value, thresholds) => {
   return 'text-danger-600';
 };
 
-export const getStatusBadge = (value, thresholds) => {
+export const getStatusBadge = (value, thresholds = {}) => {
   const { high = 90, medium = 75 } = thresholds;
   
   if (value >= high) return 'status-success';

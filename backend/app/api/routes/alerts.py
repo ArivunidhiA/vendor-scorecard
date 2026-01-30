@@ -37,7 +37,7 @@ async def get_alerts(
 ):
     """Get recent alerts with optional filtering"""
     
-    alerts = AlertService.get_recent_alerts(limit, vendor_id)
+    alerts = AlertService.get_recent_alerts(db, limit, vendor_id)
     
     # Apply additional filters
     if severity:
@@ -67,7 +67,7 @@ async def get_vendor_alerts(
 ):
     """Get alerts for a specific vendor"""
     
-    alerts = AlertService.get_recent_alerts(limit, vendor_id)
+    alerts = AlertService.get_recent_alerts(db, limit, vendor_id)
     
     return {
         "vendor_id": vendor_id,

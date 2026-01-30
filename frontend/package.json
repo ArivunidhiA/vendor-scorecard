@@ -4,15 +4,16 @@
   "description": "Criminal Records Vendor Quality Scorecard & Bake-Off System",
   "private": true,
   "dependencies": {
+    "axios": "^1.6.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.4",
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.0",
     "react-scripts": "5.0.1",
-    "recharts": "^2.8.0",
-    "axios": "^1.6.0",
-    "date-fns": "^2.30.0",
-    "clsx": "^2.0.0",
-    "lucide-react": "^0.294.0"
+    "recharts": "^2.8.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,9 +40,9 @@
     ]
   },
   "devDependencies": {
-    "tailwindcss": "^3.3.0",
     "autoprefixer": "^10.4.13",
-    "postcss": "^8.4.21"
+    "postcss": "^8.4.21",
+    "tailwindcss": "^3.3.0"
   },
-  "proxy": "http://localhost:8000"
+  "proxy": "http://localhost:8001"
 }

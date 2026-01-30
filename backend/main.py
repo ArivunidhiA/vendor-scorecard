@@ -30,8 +30,10 @@ app.include_router(comparison.router, prefix="/api", tags=["comparison"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 
-# Serve static files (JS, CSS) from the React build
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Serve static files from the React build (CRA puts assets in build/static/)
+app.mount("/static", StaticFiles(directory="static/static"), name="static")
+app.mount("/css", StaticFiles(directory="static/static/css"), name="css")
+app.mount("/js", StaticFiles(directory="static/static/js"), name="js")
 
 @app.get("/health")
 async def health_check():

@@ -1,3 +1,7 @@
+from contextlib import asynccontextmanager
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -8,22 +12,39 @@ from app.models import Vendor
 
 Base.metadata.create_all(bind=engine)
 
-# Seed empty database (e.g. on Render ephemeral disk) so dashboard has data
-def _ensure_seeded():
+# One-row table: first worker to insert wins the right to seed; others skip.
+_SEED_CLAIM_TABLE = "_seed_claim"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: run seeding in one worker only, no import-time side effects
     db = SessionLocal()
     try:
-        if db.query(Vendor).count() == 0:
-            from app.database.seed_data import create_sample_data
-            create_sample_data()
+        with engine.connect() as conn:
+            conn.execute(text(f"CREATE TABLE IF NOT EXISTS {_SEED_CLAIM_TABLE} (id INTEGER PRIMARY KEY)"))
+            conn.commit()
+        try:
+            db.execute(text(f"INSERT INTO {_SEED_CLAIM_TABLE} (id) VALUES (1)"))
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            # Another worker already claimed; skip seeding
+        else:
+            if db.query(Vendor).count() == 0:
+                from app.database.seed_data import create_sample_data
+                create_sample_data()
     finally:
         db.close()
+    yield
+    # Shutdown: nothing to do
 
-_ensure_seeded()
 
 app = FastAPI(
     title="Criminal Records Vendor Quality Scorecard API",
     description="Production-level vendor monitoring and comparison system",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

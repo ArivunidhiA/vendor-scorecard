@@ -74,10 +74,10 @@ const MistBackground = () => {
 
           float f = fbm(uv + r);
 
-          // Deep zinc palette with misty highlights (motion unchanged)
-          vec3 baseColor = vec3(0.04, 0.04, 0.06);
-          vec3 mistColor = vec3(0.20, 0.22, 0.28);
-          vec3 accentColor = vec3(0.34, 0.40, 0.50);
+          // Deep zinc palette with misty highlights (from reference demo)
+          vec3 baseColor = vec3(0.03, 0.03, 0.05);
+          vec3 mistColor = vec3(0.18, 0.20, 0.25);
+          vec3 accentColor = vec3(0.3, 0.35, 0.45);
 
           vec3 color = mix(baseColor, mistColor, f);
           color = mix(color, accentColor, dot(q, r) * 0.5);
@@ -86,10 +86,10 @@ const MistBackground = () => {
           float mouseGlow = smoothstep(0.35, 0.0, dist);
           color += mouseGlow * 0.05 * vec3(0.6, 0.7, 1.0);
 
-          // Post-processing: gamma, brightness +20%, contrast
+          // Post-processing: gamma, brightness 0.52 (darker, blue tint preserved), contrast 1.1
           color = pow(color, vec3(1.1)) * 1.4;
-          color *= 0.6;
-          color = clamp((color - 0.5) * 1.3 + 0.5, 0.0, 1.0);
+          color *= 0.52;
+          color = clamp((color - 0.5) * 1.1 + 0.5, 0.0, 1.0);
           gl_FragColor = vec4(color, 1.0);
       }
     `;
@@ -156,7 +156,7 @@ const MistBackground = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 w-full h-full pointer-events-none z-[-1]"
-      style={{ background: '#06060a' }}
+      style={{ background: '#09090b' }}
     />
   );
 };

@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Filter, Download, Eye } from 'lucide-react';
-import { formatCurrency, formatPercentage, calculateValueIndex, getQualityGrade, sortVendors, filterVendors, exportToCSV } from '../utils/calculations';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import { formatCurrency, formatPercentage, calculateValueIndex, getQualityGrade, sortVendors, filterVendors } from '../utils/calculations';
 
 const ComparisonTable = ({ vendors, onVendorSelect, showFilters = true }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'quality_score', direction: 'desc' });
@@ -65,19 +67,94 @@ const ComparisonTable = ({ vendors, onVendorSelect, showFilters = true }) => {
   };
 
   const exportData = () => {
-    const exportData = sortedVendors.map(vendor => ({
-      'Vendor Name': vendor.vendor_name,
-      'Quality Score': vendor.quality_score,
-      'Cost per Record': vendor.cost_per_record,
-      'Coverage %': vendor.coverage_percentage,
-      'Value Index': calculateValueIndex(vendor.quality_score, vendor.cost_per_record),
-      'PII Completeness': vendor.metrics_breakdown?.pii_completeness || 0,
-      'Disposition Accuracy': vendor.metrics_breakdown?.disposition_accuracy || 0,
-      'Avg Freshness Days': vendor.metrics_breakdown?.avg_freshness_days || 0,
-      'Total Records': vendor.total_records || 0
-    }));
-    
-    exportToCSV(exportData, 'vendor-comparison.csv');
+    if (!sortedVendors.length) return;
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    let y = 18;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text('Vendor Comparison', margin, y);
+    y += 10;
+
+    // Subtitle: date and count
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text(`Generated ${dateStr}  •  Showing ${sortedVendors.length} of ${vendors.length} vendors`, margin, y);
+    y += 12;
+
+    // Table: headers and rows
+    const headers = [
+      'Vendor',
+      'Quality Score',
+      'Grade',
+      'Cost/Record',
+      'Coverage %',
+      'Value Index',
+      'PII %',
+      'Disposition %',
+      'Total Records',
+    ];
+    const rows = sortedVendors.map((v) => [
+      v.vendor_name || '—',
+      v.quality_score != null ? String(v.quality_score) : 'N/A',
+      v.quality_score != null ? getQualityGrade(v.quality_score).grade : 'N/A',
+      v.cost_per_record != null ? formatCurrency(v.cost_per_record) : 'N/A',
+      v.coverage_percentage != null ? formatPercentage(v.coverage_percentage) : 'N/A',
+      v.quality_score != null && v.cost_per_record != null
+        ? String(calculateValueIndex(v.quality_score, v.cost_per_record))
+        : 'N/A',
+      v.metrics_breakdown?.pii_completeness != null
+        ? formatPercentage(v.metrics_breakdown.pii_completeness)
+        : 'N/A',
+      v.metrics_breakdown?.disposition_accuracy != null
+        ? formatPercentage(v.metrics_breakdown.disposition_accuracy)
+        : 'N/A',
+      v.total_records != null ? String(v.total_records.toLocaleString()) : 'N/A',
+    ]);
+
+    doc.autoTable({
+      head: [headers],
+      body: rows,
+      startY: y,
+      margin: { left: margin, right: margin },
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
+        cellPadding: { top: 5, right: 4, bottom: 5, left: 4 },
+      },
+      headStyles: {
+        fillColor: [38, 38, 42],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center',
+      },
+      bodyStyles: {
+        textColor: [30, 30, 30],
+      },
+      alternateRowStyles: {
+        fillColor: [248, 248, 248],
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: 'left' },
+        1: { halign: 'center' },
+        2: { halign: 'center' },
+        3: { halign: 'right' },
+        4: { halign: 'center' },
+        5: { halign: 'center' },
+        6: { halign: 'center' },
+        7: { halign: 'center' },
+        8: { halign: 'right' },
+      },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.2,
+    });
+
+    doc.save('vendor-comparison.pdf');
   };
 
   const getSortIcon = (key) => {
@@ -272,18 +349,20 @@ const ComparisonTable = ({ vendors, onVendorSelect, showFilters = true }) => {
                   </div>
                 </td>
                 <td>
-                  <div className={`font-semibold ${getQualityColor(vendor.quality_score)}`}>
-                    {vendor.quality_score || 'N/A'}
-                  </div>
-                  <div className={`text-xs ${getQualityColor(vendor.quality_score)}`}>
-                    {vendor.quality_score ? getQualityGrade(vendor.quality_score).grade : 'N/A'}
+                  <div className="text-center">
+                    <div className={`font-semibold ${getQualityColor(vendor.quality_score)}`}>
+                      {vendor.quality_score || 'N/A'}
+                    </div>
+                    <div className={`text-xs ${getQualityColor(vendor.quality_score)}`}>
+                      {vendor.quality_score ? getQualityGrade(vendor.quality_score).grade : 'N/A'}
+                    </div>
                   </div>
                 </td>
                 <td className="font-medium text-white">
                   {vendor.cost_per_record ? formatCurrency(vendor.cost_per_record) : 'N/A'}
                 </td>
                 <td>
-                  <div className="font-medium text-white">
+                  <div className="text-center font-medium text-white">
                     {vendor.coverage_percentage ? formatPercentage(vendor.coverage_percentage) : 'N/A'}
                   </div>
                 </td>

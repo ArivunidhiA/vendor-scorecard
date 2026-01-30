@@ -58,19 +58,19 @@ const LandingPage = () => {
         <TubelightNavbar items={landingNavItems} fixed={false} />
       </div>
 
-      {/* Hero - minimal gap below navbar, topic and content closer */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-2 pb-16">
+      {/* Hero - gap below navbar, content brought down (navbar unchanged above) */}
+      <section className="relative min-h-0 flex flex-col items-center justify-start overflow-hidden pt-9 pb-10">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="relative z-10 text-center px-4 sm:px-6 lg:px-8 w-full max-w-4xl mx-auto overflow-hidden"
         >
-          <h1 className="font-heading text-white mb-5 leading-tight">
+          <h1 className="font-heading text-white mb-3 leading-tight">
             <span className="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">Vendor Quality Scorecard</span>
             <span className="block text-lg sm:text-xl md:text-2xl lg:text-3xl font-normal text-white/90 italic mt-1">Scored and Compared</span>
           </h1>
-          <p className="text-base text-white/70 mb-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-base text-white/70 mb-5 max-w-lg mx-auto leading-relaxed">
             One place to monitor quality, cost, and coverage across criminal records vendors. Make decisions with data, <span className="italic">not guesswork.</span>
           </p>
           <Link to="/dashboard">
@@ -84,7 +84,7 @@ const LandingPage = () => {
             </motion.span>
           </Link>
 
-          <div className="mt-6 flex justify-center">
+          <div className="mt-4 flex justify-center">
             <Announcement className="cursor-pointer" onClick={() => navigate('/dashboard')}>
               <AnnouncementTitle>
                 New: What-if analysis — model switching costs before you change vendors
@@ -93,8 +93,8 @@ const LandingPage = () => {
             </Announcement>
           </div>
 
-          {/* Stats - less gap below hero */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-12 max-w-2xl mx-auto">
+          {/* Stats - tighter gap */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8 max-w-2xl mx-auto">
             <div className="bg-white/[0.04] rounded-2xl p-5 border border-white/[0.06] text-center">
               <div className="text-xl font-semibold text-green-500 font-heading tabular-nums">10K+</div>
               <p className="text-sm text-white/50 mt-0.5">Records processed daily</p>
@@ -112,9 +112,9 @@ const LandingPage = () => {
       </section>
 
       {/* Features - text-only cards */}
-      <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <h2 className="font-heading text-2xl font-semibold text-white mb-2">What you get</h2>
             <p className="text-white/60 text-sm max-w-lg mx-auto">Core capabilities for evaluating and managing vendor performance.</p>
           </div>
@@ -140,9 +140,9 @@ const LandingPage = () => {
       </section>
 
       {/* Dashboard Preview */}
-      <section id="analytics" className="py-12 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-32">
+      <section id="analytics" className="py-8 px-4 sm:px-6 lg:px-8 pb-16">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <h2 className="font-heading text-2xl font-semibold text-white mb-2">Dashboard preview</h2>
             <p className="text-white/60 text-sm max-w-lg mx-auto"><span className="italic">Quality, cost, and coverage in one view.</span></p>
           </div>

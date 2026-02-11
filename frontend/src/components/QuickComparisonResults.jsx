@@ -83,13 +83,36 @@ const QuickComparisonResults = ({ results, onReset, onSave }) => {
     return 'bg-red-400/20';
   };
 
+  const handleShare = async () => {
+    if (!results?.session_id) return;
+    
+    setShareLoading(true);
+    try {
+      const response = await quickAPI.createShareLink(results.session_id);
+      const fullUrl = `${window.location.origin}${response.data.share_url}`;
+      setShareUrl(fullUrl);
+    } catch (err) {
+      console.error('Failed to create share link:', err);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between flex-wrap gap-4"
       >
         <div>
           <h2 className="text-2xl font-bold text-white">Comparison Results</h2>
@@ -98,6 +121,14 @@ const QuickComparisonResults = ({ results, onReset, onSave }) => {
           </p>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={handleShare}
+            disabled={shareLoading || !results?.session_id}
+            className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>{shareLoading ? 'Creating...' : 'Share'}</span>
+          </button>
           <button
             onClick={() => exportResults('csv')}
             className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
@@ -114,6 +145,30 @@ const QuickComparisonResults = ({ results, onReset, onSave }) => {
           </button>
         </div>
       </motion.div>
+
+      {/* Share URL Display */}
+      {shareUrl && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <LinkIcon className="w-5 h-5 text-green-400" />
+              <span className="text-white/80 text-sm">Shareable link created!</span>
+            </div>
+            <button
+              onClick={copyToClipboard}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors text-sm"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+            </button>
+          </div>
+          <p className="text-white/60 text-xs mt-2 truncate">{shareUrl}</p>
+        </motion.div>
+      )}
 
       {/* Winner Card */}
       <motion.div

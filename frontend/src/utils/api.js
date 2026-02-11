@@ -87,6 +87,8 @@ export const quickAPI = {
   compare: (data) => api.post('/api/quick/compare/', data),
   getResults: (sessionId) => api.get(`/api/quick/results/${sessionId}/`),
   getDemoData: () => api.get('/api/quick/demo-data/'),
+  createShareLink: (sessionId) => api.post(`/api/quick/share/${sessionId}/`),
+  getSharedResults: (shareId) => api.get(`/api/quick/share/${shareId}/`),
 };
 
 export default api;

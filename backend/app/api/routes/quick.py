@@ -5,6 +5,7 @@ import pandas as pd
 import io
 import uuid
 from datetime import datetime, timedelta
+import pdfplumber
 
 router = APIRouter()
 
@@ -85,6 +86,93 @@ def get_recommendation_priority(priority: str, vendor: Dict) -> float:
             (100 - vendor["cost_per_record"] / 15 * 100) * 0.3
         )
 
+def parse_pdf_vendor_data(pdf_bytes):
+    """
+    Extract vendor data from PDF tables.
+    Returns a pandas DataFrame with standardized columns.
+    """
+    vendors = []
+    
+    try:
+        with pdfplumber.open(pdf_bytes) as pdf:
+            for page in pdf.pages:
+                # Extract tables from the page
+                tables = page.extract_tables()
+                
+                for table in tables:
+                    if not table or len(table) < 2:
+                        continue
+                    
+                    # First row is headers
+                    headers = [str(h).lower().strip() if h else '' for h in table[0]]
+                    
+                    # Map headers to standard columns
+                    col_indices = {}
+                    for i, h in enumerate(headers):
+                        if any(k in h for k in ['vendor', 'name', 'company', 'provider']):
+                            col_indices['vendor_name'] = i
+                        elif any(k in h for k in ['cost', 'price', 'rate', '$']):
+                            col_indices['cost_per_record'] = i
+                        elif any(k in h for k in ['quality', 'score', 'rating']):
+                            col_indices['quality_score'] = i
+                        elif any(k in h for k in ['pii', 'completeness']):
+                            col_indices['pii_completeness'] = i
+                        elif any(k in h for k in ['accuracy', 'disposition']):
+                            col_indices['disposition_accuracy'] = i
+                    
+                    # Require at least vendor name and cost
+                    if 'vendor_name' not in col_indices or 'cost_per_record' not in col_indices:
+                        continue
+                    
+                    # Parse data rows
+                    for row in table[1:]:
+                        if len(row) <= max(col_indices.values()):
+                            continue
+                        
+                        name = str(row[col_indices['vendor_name']]).strip()
+                        cost_str = str(row[col_indices['cost_per_record']]).strip()
+                        
+                        # Clean cost value
+                        cost_str = cost_str.replace('$', '').replace(',', '')
+                        try:
+                            cost = float(cost_str)
+                        except ValueError:
+                            continue
+                        
+                        vendor = {
+                            'vendor_name': name,
+                            'cost_per_record': cost
+                        }
+                        
+                        # Optional fields
+                        if 'quality_score' in col_indices and row[col_indices['quality_score']]:
+                            try:
+                                vendor['quality_score'] = float(row[col_indices['quality_score']])
+                            except:
+                                pass
+                        
+                        if 'pii_completeness' in col_indices and row[col_indices['pii_completeness']]:
+                            try:
+                                vendor['pii_completeness'] = float(row[col_indices['pii_completeness']])
+                            except:
+                                pass
+                        
+                        if 'disposition_accuracy' in col_indices and row[col_indices['disposition_accuracy']]:
+                            try:
+                                vendor['disposition_accuracy'] = float(row[col_indices['disposition_accuracy']])
+                            except:
+                                pass
+                        
+                        vendors.append(vendor)
+        
+        if not vendors:
+            raise ValueError("No vendor data found in PDF tables")
+        
+        return pd.DataFrame(vendors)
+        
+    except Exception as e:
+        raise ValueError(f"Could not parse PDF: {str(e)}")
+
 def cleanup_expired_sessions():
     """Remove expired sessions from memory."""
     now = datetime.utcnow()
@@ -103,10 +191,10 @@ async def upload_vendor_data(file: UploadFile = File(...)):
     cleanup_expired_sessions()
     
     # Validate file type
-    if not file.filename.lower().endswith(('.csv', '.xlsx', '.xls')):
+    if not file.filename.lower().endswith(('.csv', '.xlsx', '.xls', '.pdf')):
         raise HTTPException(
             status_code=400, 
-            detail="Only CSV and Excel files are supported"
+            detail="Only CSV, Excel, and PDF files are supported"
         )
     
     try:
@@ -115,6 +203,8 @@ async def upload_vendor_data(file: UploadFile = File(...)):
         # Parse based on file type
         if file.filename.lower().endswith('.csv'):
             df = pd.read_csv(io.StringIO(content.decode('utf-8')))
+        elif file.filename.lower().endswith('.pdf'):
+            df = parse_pdf_vendor_data(io.BytesIO(content))
         else:
             df = pd.read_excel(io.BytesIO(content))
         
@@ -366,5 +456,73 @@ async def get_demo_data():
                 "description": "Enterprise-grade accuracy and coverage"
             }
         ],
-        "message": "Sample data loaded. Upload your own CSV for real comparison."
+        "message": "Sample data loaded. Upload your own CSV or PDF for real comparison."
     }
+
+class ShareableResponse(BaseModel):
+    share_id: str
+    share_url: str
+    expires_at: str
+    message: str
+
+@router.post("/share/{session_id}/", response_model=ShareableResponse)
+@router.post("/share/{session_id}", response_model=ShareableResponse)
+async def create_shareable_link(session_id: str):
+    """
+    Create a shareable link for comparison results.
+    Returns a unique URL that can be shared with others.
+    """
+    cleanup_expired_sessions()
+    
+    if session_id not in _quick_sessions:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+    
+    session = _quick_sessions[session_id]
+    if not session.get("results"):
+        raise HTTPException(status_code=400, detail="No results to share")
+    
+    # Generate share ID (different from session_id for security)
+    share_id = str(uuid.uuid4())[:8]  # Short 8-char ID for easy sharing
+    
+    # Store share mapping (valid for 7 days)
+    now = datetime.utcnow()
+    session["share_id"] = share_id
+    session["share_expires_at"] = now + timedelta(days=7)
+    
+    # Construct share URL
+    share_url = f"/share/{share_id}"
+    
+    return ShareableResponse(
+        share_id=share_id,
+        share_url=share_url,
+        expires_at=session["share_expires_at"].isoformat(),
+        message="Share this link with others to view your comparison results"
+    )
+
+@router.get("/share/{share_id}/", response_model=ComparisonResult)
+@router.get("/share/{share_id}", response_model=ComparisonResult)
+async def get_shared_results(share_id: str):
+    """
+    Retrieve shared comparison results by share ID.
+    View-only access for shared links.
+    """
+    cleanup_expired_sessions()
+    
+    # Find session by share_id
+    shared_session = None
+    for sid, session in _quick_sessions.items():
+        if session.get("share_id") == share_id:
+            shared_session = session
+            break
+    
+    if not shared_session:
+        raise HTTPException(status_code=404, detail="Shared link not found or expired")
+    
+    # Check if share has expired
+    if shared_session.get("share_expires_at") and shared_session["share_expires_at"] < datetime.utcnow():
+        raise HTTPException(status_code=410, detail="Share link has expired")
+    
+    if not shared_session.get("results"):
+        raise HTTPException(status_code=404, detail="Results not found")
+    
+    return ComparisonResult(**shared_session["results"])

@@ -10,11 +10,18 @@ import {
   RotateCcw,
   CheckCircle,
   Target,
-  Zap
+  Zap,
+  Link as LinkIcon,
+  Copy,
+  Check
 } from 'lucide-react';
+import { quickAPI } from '../utils/api';
 
 const QuickComparisonResults = ({ results, onReset, onSave }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [shareUrl, setShareUrl] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   if (!results || !results.vendors || results.vendors.length === 0) {
     return (

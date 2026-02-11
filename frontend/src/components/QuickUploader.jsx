@@ -28,11 +28,11 @@ const QuickUploader = ({ onUploadSuccess, onError }) => {
 
   const processFile = async (file) => {
     // Validate file type
-    const validTypes = ['.csv', '.xlsx', '.xls'];
+    const validTypes = ['.csv', '.xlsx', '.xls', '.pdf'];
     const fileExt = '.' + file.name.split('.').pop().toLowerCase();
     
     if (!validTypes.includes(fileExt)) {
-      const err = 'Please upload a CSV or Excel file (.csv, .xlsx, .xls)';
+      const err = 'Please upload a CSV, Excel, or PDF file (.csv, .xlsx, .xls, .pdf)';
       setError(err);
       onError?.(err);
       return;

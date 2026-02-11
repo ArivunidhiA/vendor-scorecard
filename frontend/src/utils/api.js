@@ -38,7 +38,7 @@ api.interceptors.response.use(
 
 // Vendor API endpoints
 export const vendorAPI = {
-  getVendors: (params = {}) => api.get('/api/vendors', { params }),
+  getVendors: (params = {}) => api.get('/api/vendors/', { params }),
   getVendor: (id) => api.get(`/api/vendors/${id}`),
   getVendorScore: (id) => api.get(`/api/vendors/${id}/score`),
   getVendorHistory: (id, days = 30) => api.get(`/api/vendors/${id}/history`, { params: { days } }),

@@ -79,7 +79,13 @@ async def serve_app():
 
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
-    if full_path.startswith("api") or full_path.startswith("docs") or full_path.startswith("redoc") or full_path.startswith("openapi"):
+    # Skip API routes - let them be handled by their routers
+    if full_path.startswith("api/") or full_path == "api":
+        raise HTTPException(status_code=404, detail="Not found")
+    if full_path.startswith("docs") or full_path.startswith("redoc") or full_path.startswith("openapi"):
+        raise HTTPException(status_code=404, detail="Not found")
+    # Skip health check
+    if full_path == "health":
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse("static/index.html")
 

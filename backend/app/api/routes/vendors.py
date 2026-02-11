@@ -33,6 +33,7 @@ class VendorDetailResponse(BaseModel):
     jurisdiction_performance: List[dict]
     quality_trends: dict
 
+@router.get("", response_model=List[VendorResponse])
 @router.get("/", response_model=List[VendorResponse])
 async def get_vendors(
     skip: int = Query(0, ge=0),

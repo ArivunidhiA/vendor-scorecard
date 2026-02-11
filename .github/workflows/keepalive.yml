@@ -17,6 +17,19 @@ jobs:
         run: |
           url="${RENDER_APP_URL:-https://vendor-scorecard.onrender.com}/health"
           echo "Pinging $url"
-          curl -sf --max-time 60 "$url" || exit 1
+          # Initial wait for cold start (Render free tier can take 30-60s to wake up)
+          echo "Waiting 5s for initial response..."
+          sleep 5
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i..."
+            if curl -sf --max-time 30 "$url"; then
+              echo "✓ Health check passed"
+              exit 0
+            fi
+            echo "✗ Attempt $i failed, waiting for cold start..."
+            sleep 20
+          done
+          echo "All attempts failed - app may be down"
+          exit 1
         env:
           RENDER_APP_URL: ${{ vars.RENDER_APP_URL }}

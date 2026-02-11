@@ -63,6 +63,32 @@ async def get_vendors(
         for vendor in vendors
     ]
 
+@router.get("/summary")
+async def get_vendors_summary(db: Session = Depends(get_db)):
+    """Get summary statistics for all vendors"""
+    
+    vendors = db.query(Vendor).filter(Vendor.is_active == True).all()
+    
+    total_vendors = len(vendors)
+    avg_quality = sum(v.quality_score for v in vendors) / total_vendors if total_vendors > 0 else 0
+    avg_coverage = sum(v.coverage_percentage for v in vendors) / total_vendors if total_vendors > 0 else 0
+    
+    return {
+        "total_vendors": total_vendors,
+        "avg_quality_score": round(avg_quality, 1),
+        "avg_coverage": round(avg_coverage, 1),
+        "vendors": [
+            {
+                "id": v.id,
+                "name": v.name,
+                "quality_score": v.quality_score,
+                "coverage_percentage": v.coverage_percentage,
+                "cost_per_record": v.cost_per_record
+            }
+            for v in vendors
+        ]
+    }
+
 @router.get("/{vendor_id}", response_model=VendorDetailResponse)
 async def get_vendor_detail(vendor_id: int, db: Session = Depends(get_db)):
     """Get detailed information about a specific vendor"""

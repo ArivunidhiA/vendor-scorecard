@@ -93,6 +93,7 @@ def cleanup_expired_sessions():
     for sid in expired:
         del _quick_sessions[sid]
 
+@router.post("/upload/", response_model=UploadResponse)
 @router.post("/upload", response_model=UploadResponse)
 async def upload_vendor_data(file: UploadFile = File(...)):
     """
@@ -197,6 +198,7 @@ async def upload_vendor_data(file: UploadFile = File(...)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Data format error: {str(e)}")
 
+@router.post("/compare/", response_model=ComparisonResult)
 @router.post("/compare", response_model=ComparisonResult)
 async def quick_compare(request: QuickComparisonRequest):
     """
@@ -298,6 +300,7 @@ async def quick_compare(request: QuickComparisonRequest):
     
     return result
 
+@router.get("/results/{session_id}/", response_model=ComparisonResult)
 @router.get("/results/{session_id}", response_model=ComparisonResult)
 async def get_quick_results(session_id: str):
     """
@@ -314,6 +317,7 @@ async def get_quick_results(session_id: str):
     
     return ComparisonResult(**session["results"])
 
+@router.get("/demo-data/")
 @router.get("/demo-data")
 async def get_demo_data():
     """

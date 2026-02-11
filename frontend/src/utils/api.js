@@ -79,4 +79,14 @@ export const analysisAPI = {
   getRecommendations: (params = {}) => api.get('/api/recommendations/', { params }),
 };
 
+// Quick comparison API (no database required)
+export const quickAPI = {
+  uploadCSV: (formData) => api.post('/api/quick/upload/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  compare: (data) => api.post('/api/quick/compare/', data),
+  getResults: (sessionId) => api.get(`/api/quick/results/${sessionId}/`),
+  getDemoData: () => api.get('/api/quick/demo-data/'),
+};
+
 export default api;

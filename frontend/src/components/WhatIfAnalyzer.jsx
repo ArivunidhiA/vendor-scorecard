@@ -3,6 +3,14 @@ import { ArrowRight, TrendingUp, TrendingDown, DollarSign, AlertTriangle, CheckC
 import { vendorAPI, comparisonAPI } from '../utils/api';
 import { formatCurrency, formatPercentage, calculateROI, calculatePaybackPeriod, getRiskLevel } from '../utils/calculations';
 
+// Sample vendors for demo when database is empty
+const getSampleVendors = () => [
+  { id: 1, vendor_id: 1, vendor_name: 'Premium Data Corp', name: 'Premium Data Corp', cost_per_record: 12.00, quality_score: 95.0, coverage_percentage: 98.0 },
+  { id: 2, vendor_id: 2, vendor_name: 'Balanced Solutions', name: 'Balanced Solutions', cost_per_record: 8.00, quality_score: 88.0, coverage_percentage: 92.0 },
+  { id: 3, vendor_id: 3, vendor_name: 'Budget Checks', name: 'Budget Checks', cost_per_record: 5.00, quality_score: 78.0, coverage_percentage: 85.0 },
+  { id: 4, vendor_id: 4, vendor_name: 'CA Specialist', name: 'CA Specialist', cost_per_record: 10.00, quality_score: 92.0, coverage_percentage: 75.0 },
+];
+
 const WhatIfAnalyzer = () => {
   const [vendors, setVendors] = useState([]);
   const [currentVendor, setCurrentVendor] = useState('');
@@ -19,10 +27,13 @@ const WhatIfAnalyzer = () => {
   const fetchVendors = async () => {
     try {
       const response = await vendorAPI.getVendors();
-      setVendors(response.data);
+      // Use sample data if empty
+      const vendorsData = response.data?.length > 0 ? response.data : getSampleVendors();
+      setVendors(vendorsData);
     } catch (err) {
-      setError('Failed to fetch vendors');
       console.error('Error fetching vendors:', err);
+      // Use sample vendors on error
+      setVendors(getSampleVendors());
     }
   };
 

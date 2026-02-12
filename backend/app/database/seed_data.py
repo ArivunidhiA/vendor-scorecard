@@ -88,21 +88,23 @@ def create_sample_data():
         
         db.commit()
         
-        # Generate sample criminal records
+        # Generate sample criminal records - REDUCED for fast startup
         first_names = ["John", "Jane", "Michael", "Sarah", "Robert", "Emily", "David", "Jessica", "James", "Ashley"]
         last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"]
         
         dispositions = list(DispositionType)
         pii_statuses = list(PIIStatus)
         
-        for _ in range(10000):  # 10K records
-            vendor = random.choice(created_vendors)
-            jurisdiction = random.choice(created_jurisdictions)
+        # Use bulk insert for better performance - 500 records instead of 10000
+        records_to_insert = []
+        for i in range(500):  # Reduced from 10000 to 500
+            vendor = created_vendors[i % len(created_vendors)]
+            jurisdiction = created_jurisdictions[i % len(created_jurisdictions)]
             
             # Generate realistic quality variations by vendor
             has_dob = random.random() < (0.95 if vendor.name == "VendorA" else 0.85 if vendor.name == "VendorB" else 0.75 if vendor.name == "VendorC" else 0.90)
             has_ssn = random.random() < (0.94 if vendor.name == "VendorA" else 0.84 if vendor.name == "VendorB" else 0.74 if vendor.name == "VendorC" else 0.89)
-            has_full_name = random.random() < 0.98  # Generally high across vendors
+            has_full_name = random.random() < 0.98
             
             # Determine PII status
             if has_dob and has_ssn and has_full_name:
@@ -117,29 +119,33 @@ def create_sample_data():
             court_filing_date = filing_date + timedelta(days=random.randint(0, 30))
             disposition_date = court_filing_date + timedelta(days=random.randint(30, 180))
             vendor_delivery_date = court_filing_date + timedelta(hours=random.randint(12, 96))
+            turnaround_hours = (vendor_delivery_date - court_filing_date).total_seconds() / 3600
+            freshness_days = (vendor_delivery_date - court_filing_date).days
             
-            record = CriminalRecord(
-                vendor_id=vendor.id,
-                jurisdiction_id=jurisdiction.id,
-                case_number=f"CASE-{random.randint(100000, 999999)}",
-                defendant_name=f"{random.choice(first_names)} {random.choice(last_names)}",
-                date_of_birth=datetime.now() - timedelta(days=random.randint(6570, 29200)) if has_dob else None,
-                ssn=f"{random.randint(100, 999)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}" if has_ssn else None,
-                disposition_type=random.choice(dispositions),
-                disposition_date=disposition_date,
-                filing_date=filing_date,
-                court_filing_date=court_filing_date,
-                pii_status=pii_status,
-                has_dob=has_dob,
-                has_ssn=has_ssn,
-                has_full_name=has_full_name,
-                disposition_verified=random.random() < (0.96 if vendor.name == "VendorA" else 0.90 if vendor.name == "VendorB" else 0.80 if vendor.name == "VendorC" else 0.93),
-                vendor_delivery_date=vendor_delivery_date,
-                turnaround_hours=(vendor_delivery_date - court_filing_date).total_seconds() / 3600,
-                freshness_days=(vendor_delivery_date - court_filing_date).days
-            )
-            db.add(record)
+            records_to_insert.append({
+                'vendor_id': vendor.id,
+                'jurisdiction_id': jurisdiction.id,
+                'case_number': f"CASE-{random.randint(100000, 999999)}",
+                'defendant_name': f"{random.choice(first_names)} {random.choice(last_names)}",
+                'date_of_birth': (datetime.now() - timedelta(days=random.randint(6570, 29200))) if has_dob else None,
+                'ssn': (f"{random.randint(100, 999)}-{random.randint(10, 99)}-{random.randint(1000, 9999)}") if has_ssn else None,
+                'disposition_type': random.choice(dispositions),
+                'disposition_date': disposition_date,
+                'filing_date': filing_date,
+                'court_filing_date': court_filing_date,
+                'pii_status': pii_status,
+                'has_dob': has_dob,
+                'has_ssn': has_ssn,
+                'has_full_name': has_full_name,
+                'disposition_verified': random.random() < (0.96 if vendor.name == "VendorA" else 0.90 if vendor.name == "VendorB" else 0.80 if vendor.name == "VendorC" else 0.93),
+                'vendor_delivery_date': vendor_delivery_date,
+                'turnaround_hours': turnaround_hours,
+                'freshness_days': freshness_days
+            })
         
+        # Bulk insert for much better performance
+        from sqlalchemy import insert
+        db.execute(insert(CriminalRecord), records_to_insert)
         db.commit()
         
         # Create vendor metrics based on actual data

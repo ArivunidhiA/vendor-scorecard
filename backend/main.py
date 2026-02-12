@@ -65,10 +65,16 @@ app.include_router(alerts.router, prefix="/api/alerts", tags=["alerts"])
 app.include_router(analysis.router, prefix="/api", tags=["analysis"])
 app.include_router(quick.router, prefix="/api/quick", tags=["quick"])
 
+import os
+
 # Serve static files from the React build (CRA puts assets in build/static/)
-app.mount("/static", StaticFiles(directory="static/static"), name="static")
-app.mount("/css", StaticFiles(directory="static/static/css"), name="css")
-app.mount("/js", StaticFiles(directory="static/static/js"), name="js")
+# Only mount if directories exist (for local dev without built frontend)
+if os.path.exists("static/static"):
+    app.mount("/static", StaticFiles(directory="static/static"), name="static")
+if os.path.exists("static/static/css"):
+    app.mount("/css", StaticFiles(directory="static/static/css"), name="css")
+if os.path.exists("static/static/js"):
+    app.mount("/js", StaticFiles(directory="static/static/js"), name="js")
 
 @app.get("/health")
 async def health_check():
@@ -76,7 +82,9 @@ async def health_check():
 
 @app.get("/")
 async def serve_app():
-    return FileResponse("static/index.html")
+    if os.path.exists("static/index.html"):
+        return FileResponse("static/index.html")
+    return {"message": "Vendor Scorecard API - Use /docs for API documentation"}
 
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):

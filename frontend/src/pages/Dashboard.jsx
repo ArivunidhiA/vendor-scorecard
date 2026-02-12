@@ -647,13 +647,13 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="bg-white/[0.04] rounded-2xl border border-white/[0.06] max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-[#050509] rounded-2xl border border-white/[0.08] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
               <div className="p-6 border-b border-white/20">
                 <div className="flex items-center justify-between">

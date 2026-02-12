@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, FileText, X, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { quickAPI } from '../utils/api';
 
 const QuickUploader = ({ onUploadSuccess, onError }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -59,20 +60,12 @@ const QuickUploader = ({ onUploadSuccess, onError }) => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/quick/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await quickAPI.uploadCSV(formData);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Upload failed');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       setUploadedFile({ name: file.name, size: file.size });
       
       // Small delay to show 100% progress
@@ -81,8 +74,9 @@ const QuickUploader = ({ onUploadSuccess, onError }) => {
       }, 500);
 
     } catch (err) {
-      setError(err.message);
-      onError?.(err.message);
+      const msg = err.response?.data?.detail || err.message || 'Upload failed';
+      setError(msg);
+      onError?.(msg);
     } finally {
       setUploading(false);
     }

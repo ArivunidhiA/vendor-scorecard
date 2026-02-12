@@ -116,6 +116,10 @@ const LandingPage = () => {
   const loadDemoData = async () => {
     setLoading(true);
     setError(null);
+    // Scroll to quick-compare immediately so user sees the skeleton
+    setTimeout(() => {
+      document.getElementById('quick-compare')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
 
     try {
       const response = await quickAPI.getDemoData();
@@ -184,10 +188,10 @@ const LandingPage = () => {
               whileTap={{ scale: 0.98 }}
               onClick={loadDemoData}
               disabled={loading}
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors border border-white/20"
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors border border-white/20 disabled:opacity-50"
             >
               <Play className="w-5 h-5" />
-              {loading ? 'Loading...' : 'Try Demo'}
+              {loading ? 'Loading...' : 'See Demo'}
             </motion.button>
           </div>
 
@@ -249,15 +253,39 @@ const LandingPage = () => {
             <AnimatePresence mode="wait">
               {step === 'upload' && (
                 <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-8">
-                  <QuickUploader onUploadSuccess={handleUploadSuccess} onError={handleUploadError} />
-                  {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
-                  <div className="mt-6 p-4 bg-white/5 rounded-xl">
-                    <p className="text-sm text-white/60 mb-2">
-                      <FileText className="w-4 h-4 inline mr-2" />
-                      CSV should include: <span className="text-white">vendor_name</span>, <span className="text-white">cost_per_record</span>
-                    </p>
-                    <p className="text-xs text-white/40">Optional: quality_score, pii_completeness, disposition_accuracy, avg_freshness_days, coverage_percentage, description</p>
-                  </div>
+                  {loading ? (
+                    <div className="space-y-6">
+                      <div className="text-center mb-2">
+                        <div className="h-5 w-40 bg-white/10 rounded animate-pulse mx-auto mb-3" />
+                        <div className="h-3 w-56 bg-white/5 rounded animate-pulse mx-auto" />
+                      </div>
+                      <div className="space-y-4">
+                        {[1,2,3].map(i => (
+                          <div key={i} className="flex items-center gap-4 bg-white/[0.04] rounded-xl p-4 border border-white/[0.06]">
+                            <div className="w-10 h-10 bg-white/[0.06] rounded-lg animate-pulse shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+                              <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                            </div>
+                            <div className="h-8 w-16 bg-white/[0.06] rounded-lg animate-pulse shrink-0" />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="h-12 w-full bg-green-500/20 rounded-xl animate-pulse" />
+                    </div>
+                  ) : (
+                    <>
+                      <QuickUploader onUploadSuccess={handleUploadSuccess} onError={handleUploadError} />
+                      {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
+                      <div className="mt-6 p-4 bg-white/5 rounded-xl">
+                        <p className="text-sm text-white/60 mb-2">
+                          <FileText className="w-4 h-4 inline mr-2" />
+                          CSV should include: <span className="text-white">vendor_name</span>, <span className="text-white">cost_per_record</span>
+                        </p>
+                        <p className="text-xs text-white/40">Optional: quality_score, pii_completeness, disposition_accuracy, avg_freshness_days, coverage_percentage, description</p>
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               )}
 

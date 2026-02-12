@@ -71,16 +71,104 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <div className="loading-spinner w-16 h-16 mx-auto mb-6"></div>
-          <p className="text-xl font-semibold text-white animate-pulse">Loading dashboard...</p>
-        </motion.div>
+      <div className="min-h-screen">
+        {/* Skeleton Header */}
+        <header className="fixed top-0 left-0 right-0 z-40 w-full bg-[#07070c]">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-5 w-48 bg-white/10 rounded animate-pulse" />
+                <div className="h-3 w-64 bg-white/5 rounded animate-pulse mt-2" />
+              </div>
+              <div className="h-9 w-20 bg-white/10 rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </header>
+        <div className="h-[72px]" aria-hidden="true" />
+
+        {/* Skeleton Nav */}
+        <div className="mt-4 mb-2 w-full flex justify-center">
+          <div className="flex gap-3 px-4">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="h-9 w-28 bg-white/[0.06] rounded-full animate-pulse" />
+            ))}
+          </div>
+        </div>
+
+        {/* Skeleton Content */}
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24">
+          {/* Summary Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-white/[0.04] rounded-2xl border border-white/[0.06] p-5">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-3 flex-1">
+                    <div className="h-3 w-20 bg-white/10 rounded animate-pulse" />
+                    <div className="h-7 w-16 bg-white/10 rounded animate-pulse" />
+                  </div>
+                  <div className="w-10 h-10 bg-white/[0.06] rounded-xl animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Top Vendors Skeleton */}
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="h-5 w-48 bg-white/10 rounded animate-pulse" />
+                <div className="h-3 w-64 bg-white/5 rounded animate-pulse mt-2" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="bg-white/[0.04] rounded-2xl border border-white/[0.06] p-6 h-52">
+                  <div className="space-y-4">
+                    <div className="flex justify-between">
+                      <div className="space-y-2">
+                        <div className="h-5 w-32 bg-white/10 rounded animate-pulse" />
+                        <div className="h-3 w-48 bg-white/5 rounded animate-pulse" />
+                      </div>
+                      <div className="h-10 w-14 bg-white/[0.06] rounded animate-pulse" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-auto pt-4">
+                      <div className="text-center space-y-2">
+                        <div className="h-6 w-16 bg-white/10 rounded animate-pulse mx-auto" />
+                        <div className="h-3 w-20 bg-white/5 rounded animate-pulse mx-auto" />
+                      </div>
+                      <div className="text-center space-y-2">
+                        <div className="h-6 w-16 bg-white/10 rounded animate-pulse mx-auto" />
+                        <div className="h-3 w-20 bg-white/5 rounded animate-pulse mx-auto" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Alerts Skeleton */}
+          <div>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="h-5 w-40 bg-white/10 rounded animate-pulse" />
+                <div className="h-3 w-56 bg-white/5 rounded animate-pulse mt-2" />
+              </div>
+            </div>
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-white/[0.04] rounded-xl border border-white/[0.06] p-4 flex items-center gap-4">
+                  <div className="w-8 h-8 bg-white/[0.06] rounded-full animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-48 bg-white/10 rounded animate-pulse" />
+                    <div className="h-3 w-72 bg-white/5 rounded animate-pulse" />
+                  </div>
+                  <div className="h-6 w-16 bg-white/[0.06] rounded-full animate-pulse shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

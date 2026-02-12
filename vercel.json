@@ -4,7 +4,7 @@
   "installCommand": "cd frontend && npm install",
   "functions": {
     "api/index.py": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
   },
   "rewrites": [

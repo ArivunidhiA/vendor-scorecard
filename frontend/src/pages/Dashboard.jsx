@@ -166,8 +166,11 @@ const Dashboard = () => {
 
   const handleVendorSelect = (vendorId) => {
     const vendor = vendors.find(v => v.id === vendorId);
-    setSelectedVendor(vendor);
-    setActiveTab('vendor-detail');
+    if (vendor) {
+      setSelectedVendor(vendor);
+      // Keep the current tab (usually "Vendor Comparison") visible behind the modal
+      // so closing the modal never leaves a blank screen.
+    }
   };
 
   const getTopVendors = () => {
@@ -673,10 +676,22 @@ const Dashboard = () => {
                   vendor={selectedVendor}
                   metrics={{
                     quality_score: selectedVendor.quality_score,
-                    pii_completeness: selectedVendor.pii_completeness || 0,
-                    disposition_accuracy: selectedVendor.disposition_accuracy || 0,
-                    avg_freshness_days: selectedVendor.avg_freshness_days || 0,
-                    geographic_coverage: selectedVendor.geographic_coverage || 0,
+                    pii_completeness:
+                      selectedVendor.pii_completeness ??
+                      selectedVendor.metrics_breakdown?.pii_completeness ??
+                      0,
+                    disposition_accuracy:
+                      selectedVendor.disposition_accuracy ??
+                      selectedVendor.metrics_breakdown?.disposition_accuracy ??
+                      0,
+                    avg_freshness_days:
+                      selectedVendor.avg_freshness_days ??
+                      selectedVendor.metrics_breakdown?.avg_freshness_days ??
+                      0,
+                    geographic_coverage:
+                      selectedVendor.geographic_coverage ??
+                      selectedVendor.coverage_percentage ??
+                      0,
                     total_records: selectedVendor.total_records || 0
                   }}
                   showDetails={true}

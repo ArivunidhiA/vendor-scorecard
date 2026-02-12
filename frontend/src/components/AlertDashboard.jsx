@@ -306,14 +306,14 @@ const AlertDashboard = ({ vendorId = null, limit = 10 }) => {
                           onClick={() => handleAcknowledge(alert.id)}
                           className="btn-warning flex items-center space-x-2 px-4 py-2"
                         >
-                          <Clock className="w-4 h-4" />
-                          <span>Ack</span>
+                          <Clock className="w-3 h-3" />
+                          <span>Acknowledge</span>
                         </button>
                         <button
                           onClick={() => handleResolve(alert.id)}
                           className="btn-success flex items-center space-x-2 px-4 py-2"
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-3 h-3" />
                           <span>Resolve</span>
                         </button>
                       </>

@@ -173,17 +173,57 @@ const LandingPage = () => {
     setError(null);
 
     try {
-      // Transform uploaded data for comparison
-      const vendors = uploadedData.vendors.map(v => ({
-        name: v.name,
-        cost_per_record: v.cost_per_record,
-        quality_score: v.quality_score,
-        pii_completeness: v.pii_completeness,
-        disposition_accuracy: v.disposition_accuracy,
-        avg_freshness_days: v.avg_freshness_days,
-        coverage_percentage: v.coverage_percentage,
-        description: v.description
-      }));
+      // Transform uploaded data for comparison.
+      // Many CSVs include multiple rows per vendor (e.g., by month).
+      // Group by vendor name and average metrics so we stay within the
+      // backend limit of 20 vendors and produce cleaner results.
+      const grouped = {};
+      (uploadedData.vendors || []).forEach((v) => {
+        const name = (v.name || v.vendor_name || '').trim();
+        if (!name) return;
+
+        if (!grouped[name]) {
+          grouped[name] = {
+            name,
+            description: v.description || '',
+            count: 0,
+            cost_per_record: 0,
+            quality_score: 0,
+            pii_completeness: 0,
+            disposition_accuracy: 0,
+            avg_freshness_days: 0,
+            coverage_percentage: 0,
+          };
+        }
+
+        const bucket = grouped[name];
+        bucket.count += 1;
+        bucket.cost_per_record += Number(v.cost_per_record || 0);
+        if (v.quality_score != null) bucket.quality_score += Number(v.quality_score);
+        if (v.pii_completeness != null) bucket.pii_completeness += Number(v.pii_completeness);
+        if (v.disposition_accuracy != null) bucket.disposition_accuracy += Number(v.disposition_accuracy);
+        if (v.avg_freshness_days != null) bucket.avg_freshness_days += Number(v.avg_freshness_days);
+        if (v.coverage_percentage != null) bucket.coverage_percentage += Number(v.coverage_percentage);
+      });
+
+      let vendors = Object.values(grouped).map((v) => {
+        const c = v.count || 1;
+        return {
+          name: v.name,
+          description: v.description,
+          cost_per_record: v.cost_per_record / c,
+          quality_score: v.quality_score ? v.quality_score / c : undefined,
+          pii_completeness: v.pii_completeness ? v.pii_completeness / c : undefined,
+          disposition_accuracy: v.disposition_accuracy ? v.disposition_accuracy / c : undefined,
+          avg_freshness_days: v.avg_freshness_days ? v.avg_freshness_days / c : undefined,
+          coverage_percentage: v.coverage_percentage ? v.coverage_percentage / c : undefined,
+        };
+      });
+
+      // Safety: backend allows max 20 vendors.
+      if (vendors.length > 20) {
+        vendors = vendors.slice(0, 20);
+      }
 
       const response = await quickAPI.compare({
         vendors,

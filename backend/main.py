@@ -52,7 +52,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://vendor-scorecard.onrender.com",
+        "https://*.vercel.app",  # All Vercel preview and production URLs
     ],
     allow_credentials=True,
     allow_methods=["*"],

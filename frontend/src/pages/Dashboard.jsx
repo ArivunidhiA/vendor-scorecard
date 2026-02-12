@@ -13,6 +13,44 @@ import CoverageHeatmap from '../components/CoverageHeatmap';
 import AlertDashboard from '../components/AlertDashboard';
 import WhatIfAnalyzer from '../components/WhatIfAnalyzer';
 
+// Sample data for demo/portfolio when database is empty
+const getSampleVendors = () => [
+  { id: 1, name: 'Premium Data Corp', description: 'Highest quality and coverage', cost_per_record: 12.00, quality_score: 95.0, coverage_percentage: 98.0, is_active: true },
+  { id: 2, name: 'Balanced Solutions', description: 'Good quality at reasonable cost', cost_per_record: 8.00, quality_score: 88.0, coverage_percentage: 92.0, is_active: true },
+  { id: 3, name: 'Budget Checks', description: 'Lower cost, reduced quality', cost_per_record: 5.00, quality_score: 78.0, coverage_percentage: 85.0, is_active: true },
+  { id: 4, name: 'CA Specialist', description: 'California specialist', cost_per_record: 10.00, quality_score: 92.0, coverage_percentage: 75.0, is_active: true },
+];
+
+const getSampleBenchmark = () => ({
+  summary: {
+    total_vendors: 4,
+    avg_quality_score: 88.25,
+    avg_cost_per_record: 8.75,
+    avg_coverage: 87.5,
+  },
+  vendors: [
+    { vendor_id: 1, vendor_name: 'Premium Data Corp', quality_score: 95.0, cost_per_record: 12.00, geographic_coverage: 98.0, pii_completeness: 96.5, disposition_accuracy: 97.8, avg_freshness_days: 2.1, total_records: 1250, coverage_percentage: 98.0 },
+    { vendor_id: 2, vendor_name: 'Balanced Solutions', quality_score: 88.0, cost_per_record: 8.00, geographic_coverage: 92.0, pii_completeness: 89.2, disposition_accuracy: 91.5, avg_freshness_days: 3.4, total_records: 2100, coverage_percentage: 92.0 },
+    { vendor_id: 3, vendor_name: 'Budget Checks', quality_score: 78.0, cost_per_record: 5.00, geographic_coverage: 85.0, pii_completeness: 82.1, disposition_accuracy: 84.3, avg_freshness_days: 5.2, total_records: 3200, coverage_percentage: 85.0 },
+    { vendor_id: 4, vendor_name: 'CA Specialist', quality_score: 92.0, cost_per_record: 10.00, geographic_coverage: 75.0, pii_completeness: 94.2, disposition_accuracy: 95.1, avg_freshness_days: 2.8, total_records: 890, coverage_percentage: 75.0 },
+  ]
+});
+
+const getSampleCoverage = () => ({
+  vendors: ['Premium Data Corp', 'Balanced Solutions', 'Budget Checks', 'CA Specialist'],
+  jurisdictions: ['Cook County, IL', 'Los Angeles, CA', 'New York, NY', 'Miami, FL', 'Houston, TX', 'Phoenix, AZ', 'Seattle, WA', 'Orange County, CA'],
+  heatmap_data: [
+    { vendor: 'Premium Data Corp', jurisdiction: 'Cook County, IL', coverage: 98, turnaround: 24 },
+    { vendor: 'Premium Data Corp', jurisdiction: 'Los Angeles, CA', coverage: 97, turnaround: 28 },
+    { vendor: 'Premium Data Corp', jurisdiction: 'New York, NY', coverage: 99, turnaround: 22 },
+    { vendor: 'Balanced Solutions', jurisdiction: 'Cook County, IL', coverage: 92, turnaround: 36 },
+    { vendor: 'Balanced Solutions', jurisdiction: 'Los Angeles, CA', coverage: 90, turnaround: 38 },
+    { vendor: 'Budget Checks', jurisdiction: 'Cook County, IL', coverage: 85, turnaround: 48 },
+    { vendor: 'CA Specialist', jurisdiction: 'Los Angeles, CA', coverage: 98, turnaround: 26 },
+    { vendor: 'CA Specialist', jurisdiction: 'Orange County, CA', coverage: 95, turnaround: 24 },
+  ]
+});
+
 const Dashboard = () => {
   const [vendors, setVendors] = useState([]);
   const [benchmarkData, setBenchmarkData] = useState(null);
@@ -29,6 +67,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       const [vendorsRes, benchmarkRes, coverageRes] = await Promise.all([
         vendorAPI.getVendors(),
@@ -36,12 +75,20 @@ const Dashboard = () => {
         comparisonAPI.getCoverageHeatmap()
       ]);
       
-      setVendors(vendorsRes.data);
-      setBenchmarkData(benchmarkRes.data);
-      setCoverageData(coverageRes.data);
+      // If data is empty, use sample data for demo
+      const vendorsData = vendorsRes.data?.length > 0 ? vendorsRes.data : getSampleVendors();
+      const benchmarkData = benchmarkRes.data?.vendors?.length > 0 ? benchmarkRes.data : getSampleBenchmark();
+      const coverageData = coverageRes.data?.heatmap_data?.length > 0 ? coverageRes.data : getSampleCoverage();
+      
+      setVendors(vendorsData);
+      setBenchmarkData(benchmarkData);
+      setCoverageData(coverageData);
     } catch (err) {
-      setError('Failed to load dashboard data');
       console.error('Error fetching dashboard data:', err);
+      // Use sample data when API fails (for demo/portfolio)
+      setVendors(getSampleVendors());
+      setBenchmarkData(getSampleBenchmark());
+      setCoverageData(getSampleCoverage());
     } finally {
       setLoading(false);
     }

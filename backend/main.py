@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.api.routes import vendors, comparison, alerts, analysis, quick
-from app.database.db import engine, Base, SessionLocal, _is_sqlite
+from app.database.db import engine, Base, SessionLocal
 from app.models import Vendor
 
 # One-row table: first worker to insert wins the right to seed; others skip.
@@ -22,12 +22,9 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         with engine.connect() as conn:
-            if _is_sqlite:
-                conn.execute(text(f"CREATE TABLE IF NOT EXISTS {_SEED_CLAIM_TABLE} (id INTEGER PRIMARY KEY)"))
-            else:
-                conn.execute(text(
-                    f"CREATE TABLE IF NOT EXISTS {_SEED_CLAIM_TABLE} (id INTEGER PRIMARY KEY)"
-                ))
+            conn.execute(text(
+                f"CREATE TABLE IF NOT EXISTS {_SEED_CLAIM_TABLE} (id INTEGER PRIMARY KEY)"
+            ))
             conn.commit()
         try:
             db.execute(text(f"INSERT INTO {_SEED_CLAIM_TABLE} (id) VALUES (1)"))

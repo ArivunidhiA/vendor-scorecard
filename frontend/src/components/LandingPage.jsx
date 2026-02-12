@@ -18,6 +18,7 @@ import {
 import { cn } from '../lib/utils';
 import { TubelightNavbar } from './ui/TubelightNavbar';
 import { quickAPI } from '../utils/api';
+import { calculateQualityScore, calculateValueIndex } from '../utils/calculations';
 import QuickUploader from './QuickUploader';
 import QuickComparisonResults from './QuickComparisonResults';
 
@@ -173,6 +174,10 @@ const LandingPage = () => {
     setError(null);
 
     try {
+      if (!uploadedData?.vendors || uploadedData.vendors.length < 2) {
+        throw new Error('Please upload data for at least two vendors.');
+      }
+
       // Transform uploaded data for comparison.
       // Many CSVs include multiple rows per vendor (e.g., by month).
       // Group by vendor name and average metrics so we stay within the
@@ -225,17 +230,142 @@ const LandingPage = () => {
         vendors = vendors.slice(0, 20);
       }
 
-      const response = await quickAPI.compare({
-        vendors,
-        mode: config.mode,
-        priority: config.priority,
-        annual_volume: config.annualVolume ? parseInt(config.annualVolume) : null
-      });
+      const annualVolume = config.annualVolume
+        ? parseInt(config.annualVolume, 10)
+        : null;
 
-      setComparisonResults(response.data);
+      // Helper to mirror backend priority logic locally
+      const getRecommendationPriority = (priority, vendor) => {
+        const { quality_score, value_index, cost_per_record } = vendor;
+        if (priority === 'quality') {
+          return quality_score * 0.8 + value_index * 0.2;
+        }
+        if (priority === 'cost') {
+          const costScore = Math.max(
+            0,
+            100 - (cost_per_record / 15) * 100
+          );
+          return costScore * 0.6 + quality_score * 0.4;
+        }
+        if (priority === 'value') {
+          return value_index * 0.7 + quality_score * 0.3;
+        }
+        // balanced
+        return (
+          quality_score * 0.4 +
+          value_index * 0.3 +
+          (100 - (cost_per_record / 15) * 100) * 0.3
+        );
+      };
+
+      let resultData;
+
+      try {
+        // Primary path: use backend quick compare when available
+        const response = await quickAPI.compare({
+          vendors,
+          mode: config.mode,
+          priority: config.priority,
+          annual_volume: annualVolume,
+        });
+        resultData = response.data;
+      } catch (apiErr) {
+        console.error(
+          'Quick compare API failed, falling back to local calculations:',
+          apiErr
+        );
+
+        // Local fallback: compute scores and rankings entirely on the client
+        const processedVendors = vendors.map((v) => {
+          const quality =
+            v.quality_score ??
+            calculateQualityScore({
+              pii_completeness: v.pii_completeness ?? 0,
+              disposition_accuracy: v.disposition_accuracy ?? 0,
+              avg_freshness_days: v.avg_freshness_days ?? 0,
+              geographic_coverage: v.coverage_percentage ?? 0,
+            });
+
+          const valueIndex = calculateValueIndex(
+            quality,
+            v.cost_per_record || 0
+          );
+
+          const base = {
+            name: v.name,
+            description: v.description,
+            cost_per_record: Number(v.cost_per_record.toFixed(2)),
+            quality_score: Number(quality.toFixed(1)),
+            value_index: Number(valueIndex.toFixed(2)),
+          };
+
+          return {
+            ...base,
+            recommendation_score: getRecommendationPriority(
+              config.priority,
+              base
+            ),
+          };
+        });
+
+        const rankings = [...processedVendors].sort(
+          (a, b) => b.recommendation_score - a.recommendation_score
+        );
+
+        const cheapest = [...processedVendors].reduce((acc, v) =>
+          v.cost_per_record < acc.cost_per_record ? v : acc
+        );
+        const highestQuality = [...processedVendors].reduce((acc, v) =>
+          v.quality_score > acc.quality_score ? v : acc
+        );
+
+        let recommendations = null;
+        if (annualVolume && annualVolume >= 100) {
+          const costComparison = rankings.slice(0, 3).map((v) => ({
+            name: v.name,
+            quality_score: v.quality_score,
+            value_index: v.value_index,
+            annual_cost: Number(
+              (v.cost_per_record * annualVolume).toFixed(2)
+            ),
+          }));
+
+          recommendations = {
+            annual_volume: annualVolume,
+            cost_comparison: costComparison,
+            best_value: rankings[0]?.name ?? null,
+            cheapest: cheapest.name,
+            highest_quality: highestQuality.name,
+          };
+        }
+
+        resultData = {
+          session_id: null,
+          created_at: new Date().toISOString(),
+          expires_at: null,
+          vendors: processedVendors,
+          rankings: rankings.map((v, idx) => ({
+            rank: idx + 1,
+            name: v.name,
+            quality_score: v.quality_score,
+            cost_per_record: v.cost_per_record,
+            value_index: v.value_index,
+            recommendation_score: Number(
+              v.recommendation_score.toFixed(1)
+            ),
+          })),
+          recommendations,
+        };
+      }
+
+      setComparisonResults(resultData);
       setStep('results');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Comparison failed. Please try again.');
+      const message =
+        err?.message ||
+        err?.response?.data?.detail ||
+        'Comparison failed. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

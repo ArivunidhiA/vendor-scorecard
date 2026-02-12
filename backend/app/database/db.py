@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+import ssl
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,6 +21,22 @@ engine_kwargs = dict(
 if _is_sqlite:
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
+    # Use pg8000 pure-Python driver for Vercel serverless compatibility
+    if DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
+    elif DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
+    # Remove sslmode from URL query params (pg8000 uses connect_args for SSL)
+    if "sslmode=" in DATABASE_URL:
+        import re
+        DATABASE_URL = re.sub(r'[?&]sslmode=[^&]*', '', DATABASE_URL)
+        # Fix dangling ? if sslmode was the only param
+        DATABASE_URL = DATABASE_URL.rstrip('?')
+    # pg8000 SSL via connect_args
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    engine_kwargs["connect_args"] = {"ssl_context": ssl_context}
     engine_kwargs["pool_size"] = 5
     engine_kwargs["max_overflow"] = 10
 

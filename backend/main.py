@@ -10,14 +10,14 @@ from app.api.routes import vendors, comparison, alerts, analysis, quick
 from app.database.db import engine, Base, SessionLocal, _is_sqlite
 from app.models import Vendor
 
-Base.metadata.create_all(bind=engine)
-
 # One-row table: first worker to insert wins the right to seed; others skip.
 _SEED_CLAIM_TABLE = "_seed_claim"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Create tables (deferred from import time for serverless compatibility)
+    Base.metadata.create_all(bind=engine)
     # Startup: run seeding in one worker only, no import-time side effects
     db = SessionLocal()
     try:

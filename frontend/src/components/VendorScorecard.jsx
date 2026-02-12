@@ -34,7 +34,7 @@ const VendorScorecard = ({ vendor, metrics, showDetails = false, compact = false
 
   if (compact) {
     return (
-      <div className="bg-white/[0.04] rounded-2xl p-6 border border-white/[0.06] hover:border-white/[0.08] transition-colors">
+      <div className="bg-white/[0.04] rounded-2xl p-6 sm:p-7 border border-white/[0.06] hover:border-white/[0.08] transition-colors">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-white">{vendor.vendor_name || vendor.name}</h3>
@@ -72,9 +72,9 @@ const VendorScorecard = ({ vendor, metrics, showDetails = false, compact = false
   }
 
   return (
-    <div className="bg-white/[0.04] rounded-2xl border border-white/[0.06] hover:border-white/[0.08] transition-colors">
+    <div className="bg-white/[0.04] rounded-2xl border border-white/[0.06] hover:border-white/[0.08] transition-colors p-6 sm:p-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6 p-6">
+      <div className="flex items-start justify-between mb-6">
         <div className="flex-1">
           <div className="flex items-center space-x-3 mb-2">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${qualityClass}`}>

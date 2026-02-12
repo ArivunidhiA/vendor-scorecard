@@ -655,7 +655,7 @@ const Dashboard = () => {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="bg-[#050509] rounded-2xl border border-white/[0.08] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
-              <div className="px-6 sm:px-8 py-5 border-b border-white/20">
+              <div className="p-6 border-b border-white/20">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-bold text-white">
                     {selectedVendor.name} - Detailed Analysis
@@ -671,33 +671,31 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="px-6 sm:px-8 py-6">
-                <div className="max-w-3xl mx-auto">
-                  <VendorScorecard
-                    vendor={selectedVendor}
-                    metrics={{
-                      quality_score: selectedVendor.quality_score,
-                      pii_completeness:
-                        selectedVendor.pii_completeness ??
-                        selectedVendor.metrics_breakdown?.pii_completeness ??
-                        0,
-                      disposition_accuracy:
-                        selectedVendor.disposition_accuracy ??
-                        selectedVendor.metrics_breakdown?.disposition_accuracy ??
-                        0,
-                      avg_freshness_days:
-                        selectedVendor.avg_freshness_days ??
-                        selectedVendor.metrics_breakdown?.avg_freshness_days ??
-                        0,
-                      geographic_coverage:
-                        selectedVendor.geographic_coverage ??
-                        selectedVendor.coverage_percentage ??
-                        0,
-                      total_records: selectedVendor.total_records || 0
-                    }}
-                    showDetails={true}
-                  />
-                </div>
+              <div className="p-6">
+                <VendorScorecard
+                  vendor={selectedVendor}
+                  metrics={{
+                    quality_score: selectedVendor.quality_score,
+                    pii_completeness:
+                      selectedVendor.pii_completeness ??
+                      selectedVendor.metrics_breakdown?.pii_completeness ??
+                      0,
+                    disposition_accuracy:
+                      selectedVendor.disposition_accuracy ??
+                      selectedVendor.metrics_breakdown?.disposition_accuracy ??
+                      0,
+                    avg_freshness_days:
+                      selectedVendor.avg_freshness_days ??
+                      selectedVendor.metrics_breakdown?.avg_freshness_days ??
+                      0,
+                    geographic_coverage:
+                      selectedVendor.geographic_coverage ??
+                      selectedVendor.coverage_percentage ??
+                      0,
+                    total_records: selectedVendor.total_records || 0
+                  }}
+                  showDetails={true}
+                />
               </div>
             </motion.div>
           </motion.div>

@@ -186,12 +186,11 @@ const LandingPage = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={loadDemoData}
-              disabled={loading}
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors border border-white/20 disabled:opacity-50"
+              onClick={() => navigate('/dashboard')}
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-medium transition-colors border border-white/20"
             >
               <Play className="w-5 h-5" />
-              {loading ? 'Loading...' : 'See Demo'}
+              See Demo
             </motion.button>
           </div>
 
@@ -276,7 +275,6 @@ const LandingPage = () => {
                   ) : (
                     <>
                       <QuickUploader onUploadSuccess={handleUploadSuccess} onError={handleUploadError} />
-                      {error && <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
                       <div className="mt-6 p-4 bg-white/5 rounded-xl">
                         <p className="text-sm text-white/60 mb-2">
                           <FileText className="w-4 h-4 inline mr-2" />

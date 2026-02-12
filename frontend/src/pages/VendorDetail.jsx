@@ -6,6 +6,148 @@ import { vendorAPI, alertAPI } from '../utils/api';
 import { formatCurrency, formatPercentage, formatDate, getQualityGrade, getStatusColor } from '../utils/calculations';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// Lightweight sample vendor details so the detail page
+// still works in demo/portfolio deployments without a backend.
+const SAMPLE_VENDOR_DETAILS = {
+  1: {
+    vendor: {
+      id: 1,
+      name: 'Premium Data Corp',
+      description: 'Highest quality and coverage',
+      cost_per_record: 12.0,
+      coverage_percentage: 98.0,
+    },
+    metrics: {
+      quality_score: 95.0,
+      pii_completeness: 96.5,
+      disposition_accuracy: 97.8,
+      avg_freshness_days: 2.1,
+      geographic_coverage: 98.0,
+      total_records: 1250,
+    },
+  },
+  2: {
+    vendor: {
+      id: 2,
+      name: 'Balanced Solutions',
+      description: 'Good quality at reasonable cost',
+      cost_per_record: 8.0,
+      coverage_percentage: 92.0,
+    },
+    metrics: {
+      quality_score: 88.0,
+      pii_completeness: 89.2,
+      disposition_accuracy: 91.5,
+      avg_freshness_days: 3.4,
+      geographic_coverage: 92.0,
+      total_records: 2100,
+    },
+  },
+  3: {
+    vendor: {
+      id: 3,
+      name: 'Budget Checks',
+      description: 'Lower cost, reduced quality',
+      cost_per_record: 5.0,
+      coverage_percentage: 85.0,
+    },
+    metrics: {
+      quality_score: 78.0,
+      pii_completeness: 82.1,
+      disposition_accuracy: 84.3,
+      avg_freshness_days: 5.2,
+      geographic_coverage: 85.0,
+      total_records: 3200,
+    },
+  },
+  4: {
+    vendor: {
+      id: 4,
+      name: 'CA Specialist',
+      description: 'California specialist',
+      cost_per_record: 10.0,
+      coverage_percentage: 75.0,
+    },
+    metrics: {
+      quality_score: 92.0,
+      pii_completeness: 94.2,
+      disposition_accuracy: 95.1,
+      avg_freshness_days: 2.8,
+      geographic_coverage: 75.0,
+      total_records: 890,
+    },
+  },
+};
+
+const buildSampleHistory = (metrics) => {
+  // Simple synthetic trend over the last few weeks.
+  const baseDate = new Date();
+  return Array.from({ length: 6 }).map((_, idx) => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() - (5 - idx) * 7);
+    const jitter = (amount) => amount + (Math.random() * 4 - 2);
+    return {
+      date: d.toISOString(),
+      quality_score: jitter(metrics.quality_score),
+      pii_completeness: jitter(metrics.pii_completeness),
+      disposition_accuracy: jitter(metrics.disposition_accuracy),
+      avg_freshness_days: Math.max(1, jitter(metrics.avg_freshness_days)),
+    };
+  });
+};
+
+const buildSampleJurisdictions = (metrics) => {
+  const baseCoverage = metrics.geographic_coverage;
+  return [
+    {
+      jurisdiction: 'Los Angeles',
+      state: 'CA',
+      coverage_percentage: baseCoverage,
+      avg_turnaround_hours: 26.0,
+      record_count: Math.round(metrics.total_records * 0.2),
+      pii_completeness_rate: metrics.pii_completeness,
+      disposition_accuracy_rate: metrics.disposition_accuracy,
+    },
+    {
+      jurisdiction: 'Cook County',
+      state: 'IL',
+      coverage_percentage: Math.max(75, baseCoverage - 5),
+      avg_turnaround_hours: 30.0,
+      record_count: Math.round(metrics.total_records * 0.25),
+      pii_completeness_rate: Math.max(80, metrics.pii_completeness - 3),
+      disposition_accuracy_rate: Math.max(80, metrics.disposition_accuracy - 4),
+    },
+    {
+      jurisdiction: 'New York',
+      state: 'NY',
+      coverage_percentage: Math.max(80, baseCoverage - 3),
+      avg_turnaround_hours: 28.0,
+      record_count: Math.round(metrics.total_records * 0.3),
+      pii_completeness_rate: metrics.pii_completeness,
+      disposition_accuracy_rate: metrics.disposition_accuracy,
+    },
+  ];
+};
+
+const buildSampleAlerts = (vendorName) => [
+  {
+    id: 1,
+    title: 'PII Completeness Watch',
+    description: `${vendorName} has recently dipped slightly below target for PII completeness in one region.`,
+    severity: 'medium',
+    status: 'active',
+    triggered_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 2,
+    title: 'Turnaround Improving',
+    description: `${vendorName} turnaround times have improved week over week.`,
+    severity: 'low',
+    status: 'acknowledged',
+    triggered_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 const VendorDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,7 +170,7 @@ const VendorDetail = () => {
   const fetchVendorData = async () => {
     try {
       setLoading(true);
-      
+
       const [vendorRes, metricsRes, historyRes, jurRes, trendsRes, alertsRes] = await Promise.all([
         vendorAPI.getVendor(id),
         vendorAPI.getVendorScore(id),
@@ -37,7 +179,7 @@ const VendorDetail = () => {
         vendorAPI.getVendorHistory(id, 30), // Using history for trends
         alertAPI.getVendorAlerts(id, 10)
       ]);
-      
+
       setVendor(vendorRes.data.vendor);
       setMetrics(vendorRes.data.metrics);
       setHistory(historyRes.data.history);
@@ -45,8 +187,23 @@ const VendorDetail = () => {
       setTrends(trendsRes.data.history);
       setAlerts(alertsRes.data.alerts);
     } catch (err) {
-      setError('Failed to load vendor details');
       console.error('Error fetching vendor data:', err);
+
+      // Fallback to sample data in demo/portfolio deployments.
+      const vendorId = parseInt(id, 10);
+      const sample = SAMPLE_VENDOR_DETAILS[vendorId];
+      if (sample) {
+        const { vendor: sampleVendor, metrics: sampleMetrics } = sample;
+        setVendor(sampleVendor);
+        setMetrics(sampleMetrics);
+        setHistory(buildSampleHistory(sampleMetrics));
+        setJurisdictions(buildSampleJurisdictions(sampleMetrics));
+        setTrends(buildSampleHistory(sampleMetrics));
+        setAlerts(buildSampleAlerts(sampleVendor.name));
+        setError(null);
+      } else {
+        setError('Failed to load vendor details');
+      }
     } finally {
       setLoading(false);
     }

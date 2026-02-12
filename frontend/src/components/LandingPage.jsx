@@ -21,6 +21,94 @@ import { quickAPI } from '../utils/api';
 import QuickUploader from './QuickUploader';
 import QuickComparisonResults from './QuickComparisonResults';
 
+// Pure front-end demo comparison data so the app
+// works on Vercel even without any backend.
+const DEMO_COMPARISON_RESULTS = {
+  session_id: null,
+  vendors: [
+    {
+      name: 'Premium Data Corp',
+      cost_per_record: 12.0,
+      quality_score: 95.0,
+      value_index: 7.9,
+    },
+    {
+      name: 'Balanced Solutions',
+      cost_per_record: 8.0,
+      quality_score: 88.0,
+      value_index: 11.0,
+    },
+    {
+      name: 'Budget Checks',
+      cost_per_record: 5.0,
+      quality_score: 78.0,
+      value_index: 15.6,
+    },
+    {
+      name: 'CA Specialist',
+      cost_per_record: 10.0,
+      quality_score: 92.0,
+      value_index: 9.2,
+    },
+  ],
+  rankings: [
+    {
+      rank: 1,
+      name: 'Balanced Solutions',
+      cost_per_record: 8.0,
+      quality_score: 88.0,
+      value_index: 11.0,
+    },
+    {
+      rank: 2,
+      name: 'Premium Data Corp',
+      cost_per_record: 12.0,
+      quality_score: 95.0,
+      value_index: 7.9,
+    },
+    {
+      rank: 3,
+      name: 'CA Specialist',
+      cost_per_record: 10.0,
+      quality_score: 92.0,
+      value_index: 9.2,
+    },
+    {
+      rank: 4,
+      name: 'Budget Checks',
+      cost_per_record: 5.0,
+      quality_score: 78.0,
+      value_index: 15.6,
+    },
+  ],
+  recommendations: {
+    annual_volume: 50000,
+    cost_comparison: [
+      {
+        name: 'Balanced Solutions',
+        quality_score: 88.0,
+        annual_cost: 400000,
+      },
+      {
+        name: 'Premium Data Corp',
+        quality_score: 95.0,
+        annual_cost: 600000,
+      },
+      {
+        name: 'CA Specialist',
+        quality_score: 92.0,
+        annual_cost: 525000,
+      },
+      {
+        name: 'Budget Checks',
+        quality_score: 78.0,
+        annual_cost: 250000,
+      },
+    ],
+    best_value: 'Balanced Solutions',
+  },
+};
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState('upload'); // upload, configure, results
@@ -116,17 +204,36 @@ const LandingPage = () => {
   const loadDemoData = async () => {
     setLoading(true);
     setError(null);
-    // Scroll to quick-compare immediately so user sees the skeleton
+
+    // Scroll to quick-compare immediately so the user sees the skeleton
     setTimeout(() => {
-      document.getElementById('quick-compare')?.scrollIntoView({ behavior: 'smooth' });
+      document
+        .getElementById('quick-compare')
+        ?.scrollIntoView({ behavior: 'smooth' });
     }, 50);
 
     try {
-      const response = await quickAPI.getDemoData();
-      setUploadedData({ vendors: response.data.vendors });
-      setStep('configure');
-    } catch (err) {
-      setError('Failed to load demo data');
+      // Prefer backend demo endpoint when available,
+      // but always fall back to local static results.
+      let data = null;
+      try {
+        const response = await quickAPI.getDemoData();
+        if (response?.data?.vendors && response.data.vendors.length > 0) {
+          // Newer backend may return full comparison payload.
+          data = response.data.rankings
+            ? response.data
+            : {
+                ...DEMO_COMPARISON_RESULTS,
+                vendors: response.data.vendors,
+              };
+        }
+      } catch {
+        // Ignore network / backend errors – we'll use static demo data.
+        data = null;
+      }
+
+      setComparisonResults(data || DEMO_COMPARISON_RESULTS);
+      setStep('results');
     } finally {
       setLoading(false);
     }
@@ -281,6 +388,19 @@ const LandingPage = () => {
                           CSV should include: <span className="text-white">vendor_name</span>, <span className="text-white">cost_per_record</span>
                         </p>
                         <p className="text-xs text-white/40">Optional: quality_score, pii_completeness, disposition_accuracy, avg_freshness_days, coverage_percentage, description</p>
+                        <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <p className="text-xs text-white/50">
+                            Just browsing? Use built-in demo data to see a full comparison without uploading a file.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={loadDemoData}
+                            className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium text-white border border-white/20 transition-colors"
+                          >
+                            Try with demo data
+                            <ArrowUpRight className="w-3 h-3 ml-1" />
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}

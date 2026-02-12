@@ -37,17 +37,53 @@ const getSampleBenchmark = () => ({
 });
 
 const getSampleCoverage = () => ({
-  vendors: ['Premium Data Corp', 'Balanced Solutions', 'Budget Checks', 'CA Specialist'],
-  jurisdictions: ['Cook County, IL', 'Los Angeles, CA', 'New York, NY', 'Miami, FL', 'Houston, TX', 'Phoenix, AZ', 'Seattle, WA', 'Orange County, CA'],
+  vendors: [
+    { id: 1, name: 'Premium Data Corp' },
+    { id: 2, name: 'Balanced Solutions' },
+    { id: 3, name: 'Budget Checks' },
+    { id: 4, name: 'CA Specialist' },
+  ],
+  jurisdictions: [
+    { id: 1, name: 'Cook County', state: 'IL' },
+    { id: 2, name: 'Los Angeles', state: 'CA' },
+    { id: 3, name: 'New York', state: 'NY' },
+    { id: 4, name: 'Miami', state: 'FL' },
+    { id: 5, name: 'Houston', state: 'TX' },
+    { id: 6, name: 'Phoenix', state: 'AZ' },
+    { id: 7, name: 'Seattle', state: 'WA' },
+    { id: 8, name: 'Orange County', state: 'CA' },
+  ],
   heatmap_data: [
-    { vendor: 'Premium Data Corp', jurisdiction: 'Cook County, IL', coverage: 98, turnaround: 24 },
-    { vendor: 'Premium Data Corp', jurisdiction: 'Los Angeles, CA', coverage: 97, turnaround: 28 },
-    { vendor: 'Premium Data Corp', jurisdiction: 'New York, NY', coverage: 99, turnaround: 22 },
-    { vendor: 'Balanced Solutions', jurisdiction: 'Cook County, IL', coverage: 92, turnaround: 36 },
-    { vendor: 'Balanced Solutions', jurisdiction: 'Los Angeles, CA', coverage: 90, turnaround: 38 },
-    { vendor: 'Budget Checks', jurisdiction: 'Cook County, IL', coverage: 85, turnaround: 48 },
-    { vendor: 'CA Specialist', jurisdiction: 'Los Angeles, CA', coverage: 98, turnaround: 26 },
-    { vendor: 'CA Specialist', jurisdiction: 'Orange County, CA', coverage: 95, turnaround: 24 },
+    // Premium Data Corp - High coverage everywhere
+    { vendor_id: 1, jurisdiction_id: 1, coverage_percentage: 98, turnaround_hours: 24 },
+    { vendor_id: 1, jurisdiction_id: 2, coverage_percentage: 97, turnaround_hours: 28 },
+    { vendor_id: 1, jurisdiction_id: 3, coverage_percentage: 99, turnaround_hours: 22 },
+    { vendor_id: 1, jurisdiction_id: 4, coverage_percentage: 96, turnaround_hours: 30 },
+    { vendor_id: 1, jurisdiction_id: 5, coverage_percentage: 98, turnaround_hours: 26 },
+    { vendor_id: 1, jurisdiction_id: 6, coverage_percentage: 97, turnaround_hours: 27 },
+    { vendor_id: 1, jurisdiction_id: 7, coverage_percentage: 99, turnaround_hours: 25 },
+    { vendor_id: 1, jurisdiction_id: 8, coverage_percentage: 98, turnaround_hours: 26 },
+    // Balanced Solutions - Good coverage
+    { vendor_id: 2, jurisdiction_id: 1, coverage_percentage: 92, turnaround_hours: 36 },
+    { vendor_id: 2, jurisdiction_id: 2, coverage_percentage: 90, turnaround_hours: 38 },
+    { vendor_id: 2, jurisdiction_id: 3, coverage_percentage: 94, turnaround_hours: 34 },
+    { vendor_id: 2, jurisdiction_id: 4, coverage_percentage: 88, turnaround_hours: 40 },
+    { vendor_id: 2, jurisdiction_id: 5, coverage_percentage: 91, turnaround_hours: 37 },
+    { vendor_id: 2, jurisdiction_id: 6, coverage_percentage: 89, turnaround_hours: 39 },
+    { vendor_id: 2, jurisdiction_id: 7, coverage_percentage: 93, turnaround_hours: 35 },
+    { vendor_id: 2, jurisdiction_id: 8, coverage_percentage: 90, turnaround_hours: 38 },
+    // Budget Checks - Lower coverage
+    { vendor_id: 3, jurisdiction_id: 1, coverage_percentage: 85, turnaround_hours: 48 },
+    { vendor_id: 3, jurisdiction_id: 2, coverage_percentage: 82, turnaround_hours: 52 },
+    { vendor_id: 3, jurisdiction_id: 3, coverage_percentage: 87, turnaround_hours: 46 },
+    { vendor_id: 3, jurisdiction_id: 4, coverage_percentage: 80, turnaround_hours: 54 },
+    { vendor_id: 3, jurisdiction_id: 5, coverage_percentage: 83, turnaround_hours: 50 },
+    { vendor_id: 3, jurisdiction_id: 6, coverage_percentage: 81, turnaround_hours: 53 },
+    { vendor_id: 3, jurisdiction_id: 7, coverage_percentage: 86, turnaround_hours: 47 },
+    { vendor_id: 3, jurisdiction_id: 8, coverage_percentage: 84, turnaround_hours: 49 },
+    // CA Specialist - Only CA coverage
+    { vendor_id: 4, jurisdiction_id: 2, coverage_percentage: 98, turnaround_hours: 26 },
+    { vendor_id: 4, jurisdiction_id: 8, coverage_percentage: 95, turnaround_hours: 24 },
   ]
 });
 
@@ -68,18 +104,52 @@ const Dashboard = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [vendorsRes, benchmarkRes, coverageRes] = await Promise.all([
         vendorAPI.getVendors(),
         vendorAPI.getBenchmark(),
-        comparisonAPI.getCoverageHeatmap()
+        comparisonAPI.getCoverageHeatmap(),
       ]);
-      
-      // If data is empty, use sample data for demo
-      const vendorsData = vendorsRes.data?.length > 0 ? vendorsRes.data : getSampleVendors();
-      const benchmarkData = benchmarkRes.data?.vendors?.length > 0 ? benchmarkRes.data : getSampleBenchmark();
-      const coverageData = coverageRes.data?.heatmap_data?.length > 0 ? coverageRes.data : getSampleCoverage();
-      
+
+      // Treat "all zeros" or missing metrics as empty so demo data
+      // is always used for portfolio / Vercel deployments.
+      const apiVendors = Array.isArray(vendorsRes.data) ? vendorsRes.data : [];
+      const hasRealVendorMetrics = apiVendors.some(
+        (v) =>
+          (typeof v.quality_score === 'number' && v.quality_score > 0) ||
+          (typeof v.coverage_percentage === 'number' && v.coverage_percentage > 0) ||
+          (typeof v.cost_per_record === 'number' && v.cost_per_record > 0)
+      );
+      const vendorsData = hasRealVendorMetrics ? apiVendors : getSampleVendors();
+
+      const apiBenchmark = benchmarkRes.data || {};
+      const apiBenchmarkVendors = Array.isArray(apiBenchmark.vendors)
+        ? apiBenchmark.vendors
+        : [];
+      const hasRealBenchmarkMetrics = apiBenchmarkVendors.some(
+        (v) =>
+          (typeof v.quality_score === 'number' && v.quality_score > 0) ||
+          (typeof v.geographic_coverage === 'number' && v.geographic_coverage > 0) ||
+          (typeof v.coverage_percentage === 'number' && v.coverage_percentage > 0)
+      );
+      const benchmarkData = hasRealBenchmarkMetrics ? apiBenchmark : getSampleBenchmark();
+
+      const apiCoverage = coverageRes.data || {};
+      const apiHeatmap = Array.isArray(apiCoverage.heatmap_data)
+        ? apiCoverage.heatmap_data
+        : [];
+      const hasRealCoverage = apiHeatmap.some(
+        (d) => typeof d.coverage_percentage === 'number' && d.coverage_percentage > 0
+      );
+      const hasCoverageShape =
+        Array.isArray(apiCoverage.vendors) &&
+        apiCoverage.vendors.length > 0 &&
+        Array.isArray(apiCoverage.jurisdictions) &&
+        apiCoverage.jurisdictions.length > 0;
+
+      const coverageData =
+        hasRealCoverage && hasCoverageShape ? apiCoverage : getSampleCoverage();
+
       setVendors(vendorsData);
       setBenchmarkData(benchmarkData);
       setCoverageData(coverageData);
